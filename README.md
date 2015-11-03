@@ -10,9 +10,51 @@ Entry.objects.filter(**kwargs).exclude(**kwargs).order_by(**kwargs)
 ```
 
  * [filter](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#filter)
+ ```python
+ Entry.objects.filter(id__in=[1, 3, 4])
+ SELECT ... WHERE id IN (1, 3, 4);
+ 
+ inner_qs = Blog.objects.filter(name__contains='Cheddar')
+ entries = Entry.objects.filter(blog__in=inner_qs)
+ SELECT ... WHERE blog.id IN (SELECT id FROM ... WHERE NAME LIKE '%Cheddar%')
+ ``` 
+ 
  * [exclude](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#exclude)
+ ```python
+ Entry.objects.exclude(pub_date__gt=datetime.date(2005, 1, 3), headline='Hello')
+ SELECT ... WHERE NOT (pub_date > '2005-1-3' AND headline = 'Hello')
+ 
+ Entry.objects.exclude(pub_date__gt=datetime.date(2005, 1, 3)).exclude(headline='Hello')
+ SELECT ... WHERE NOT pub_date > '2005-1-3' AND NOT headline = 'Hello'
+ ```
  * [annotate](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#annotate)
+ ```python
+ >>> from django.db.models import Count
+ >>> q = Blog.objects.annotate(Count('entry'))
+ # The name of the first blog
+ >>> q[0].name
+ 'Blogasaurus'
+ # The number of entries on the first blog
+ >>> q[0].entry__count
+ 42
+ 
+ >>> q = Blog.objects.annotate(number_of_entries=Count('entry'))
+ # The number of entries on the first blog, using the name provided
+ >>> q[0].number_of_entries
+ 42
+ ```
  * [order_by](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#order-by)
+ ```python
+ Entry.objects.filter(pub_date__year=2005).order_by('-pub_date', 'headline')
+ The result above will be ordered by pub_date descending, then by headline ascending. 
+ The negative sign in front   of "-pub_date" indicates descending order. 
+ Ascending order is implied. 
+ 
+ # No Join
+ Entry.objects.order_by('blog_id')
+ # Join
+ Entry.objects.order_by('blog__id')
+ ```
  * [reverse](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#reverse)
  * [distinct](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#distinct)
  * [values](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#values)
