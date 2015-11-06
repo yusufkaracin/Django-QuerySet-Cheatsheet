@@ -56,9 +56,46 @@ Entry.objects.filter(**kwargs).exclude(**kwargs).order_by(**kwargs)
  Entry.objects.order_by('blog__id')
  ```
  * [reverse](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#reverse)
+ ```python
+ Use the reverse() method to reverse the order in which a queryset’s elements are returned. 
+ Calling reverse() a second time restores the ordering back to the normal direction.
+ 
+ my_queryset.reverse()[:5]
+ ```
  * [distinct](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#distinct)
+ ```python
+ When using distinct() and values() together, be careful when ordering by fields
+ not in the values() call.
+ 
+ When you specify field names, you must provide an order_by() in the QuerySet, 
+ and the fields in order_by() must  start with the fields in distinct(), in the same order.
+ 
+ Author.objects.distinct()
+
+ Entry.objects.order_by('pub_date').distinct('pub_date')
+ 
+ Entry.objects.order_by('blog__name', 'mod_date').distinct('blog__name', 'mod_date')
+ ```
  * [values](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#values)
+ ```python
+ Blog.objects.filter(name__startswith='Beatles').values()
+ [{'id': 1, 'name': 'Beatles Blog', 'tagline': 'All the latest Beatles news.'}]
+ 
+ Entry.objects.values('blog_id')
+ [{'blog_id': 1}, ...]
+ 
+ Blog.objects.values('name', 'entry__headline')
+ [{'name': 'My blog', 'entry__headline': 'An entry'},
+     {'name': 'My blog', 'entry__headline': 'Another entry'}, ...]
+ ```
  * [values_list](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#values-list)
+ ```python
+ Entry.objects.values_list('id', 'headline')
+ [(1, 'First entry'), ...]
+ 
+ Entry.objects.values_list('id', flat=True).order_by('id')
+ [1, 2, 3, ...]
+ ```
  * [dates](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#dates)
  * [datetimes](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#datetimes)
  * [none](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#none)
