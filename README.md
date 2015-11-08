@@ -24,7 +24,8 @@ Entry.objects.filter(**kwargs).exclude(**kwargs).order_by(**kwargs)
  Entry.objects.exclude(pub_date__gt=datetime.date(2005, 1, 3), headline='Hello')
  SELECT ... WHERE NOT (pub_date > '2005-1-3' AND headline = 'Hello')
  
- Entry.objects.exclude(pub_date__gt=datetime.date(2005, 1, 3)).exclude(headline='Hello')
+ Entry.objects.exclude(pub_date__gt=datetime.date(2005, 1, 3))/
+ .exclude(headline='Hello')
  SELECT ... WHERE NOT pub_date > '2005-1-3' AND NOT headline = 'Hello'
  ```
  * [annotate](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#annotate)
@@ -46,7 +47,8 @@ Entry.objects.filter(**kwargs).exclude(**kwargs).order_by(**kwargs)
  * [order_by](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#order-by)
  ```python
  Entry.objects.filter(pub_date__year=2005).order_by('-pub_date', 'headline')
- The result above will be ordered by pub_date descending, then by headline ascending. 
+ The result above will be ordered by pub_date descending, 
+ then by headline ascending. 
  The negative sign in front   of "-pub_date" indicates descending order. 
  Ascending order is implied. 
  
@@ -57,7 +59,8 @@ Entry.objects.filter(**kwargs).exclude(**kwargs).order_by(**kwargs)
  ```
  * [reverse](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#reverse)
  ```python
- Use the reverse() method to reverse the order in which a queryset’s elements are returned. 
+ Use the reverse() method to reverse the order in 
+ which a queryset’s elements are returned. 
  Calling reverse() a second time restores the ordering back to the normal direction.
  
  my_queryset.reverse()[:5]
@@ -68,7 +71,8 @@ Entry.objects.filter(**kwargs).exclude(**kwargs).order_by(**kwargs)
  not in the values() call.
  
  When you specify field names, you must provide an order_by() in the QuerySet, 
- and the fields in order_by() must  start with the fields in distinct(), in the same order.
+ and the fields in order_by() must  start with the fields in distinct(), 
+ in the same order.
  
  Author.objects.distinct()
 
@@ -97,10 +101,84 @@ Entry.objects.filter(**kwargs).exclude(**kwargs).order_by(**kwargs)
  [1, 2, 3, ...]
  ```
  * [dates](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#dates)
+ ```python
+ field should be the name of a DateField of your model. 
+ kind should be either "year", "month" or "day". 
+ Each datetime.date object in the result list is “truncated” to the given type.
+
+ * "year" returns a list of all distinct year values for the field.
+ * "month" returns a list of all distinct year/month values for the field.
+ * "day" returns a list of all distinct year/month/day values for the field.
+ 
+ Entry.objects.dates('pub_date', 'year')
+ [datetime.date(2005, 1, 1)]
+ 
+ Entry.objects.dates('pub_date', 'month')
+ [datetime.date(2005, 2, 1), datetime.date(2005, 3, 1)]
+
+ Entry.objects.dates('pub_date', 'day')
+ [datetime.date(2005, 2, 20), datetime.date(2005, 3, 20)]
+
+ Entry.objects.dates('pub_date', 'day', order='DESC')
+ [datetime.date(2005, 3, 20), datetime.date(2005, 2, 20)]
+ ```
  * [datetimes](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#datetimes)
+ ```python
+ tzinfo defines the time zone to which datetimes are converted prior to truncation. 
+ Indeed, a given datetime has different representations depending on the time zone in use. 
+ This parameter must be a datetime.tzinfo object. 
+ If it’s None, Django uses the current time zone. It has no effect when USE_TZ is False.
+ 
+ This function performs time zone conversions directly in the database. 
+ As a consequence, your database must be able to interpret the value of tzinfo.tzname(None). 
+ This translates into the following requirements:
+
+ * SQLite: install pytz — conversions are actually performed in Python.
+ * PostgreSQL: no requirements (see Time Zones).
+ * Oracle: no requirements (see Choosing a Time Zone File).
+ * MySQL: install pytz and load the time zone tables with mysql_tzinfo_to_sql.
+ ```
  * [none](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#none)
+ ```python
+ Calling none() will create a queryset that never returns any objects and 
+ no query will be executed when accessing the results. 
+ A qs.none() queryset is an instance of EmptyQuerySet.
+ 
+ Entry.objects.none()
+ []
+ 
+ from django.db.models.query import EmptyQuerySet
+ isinstance(Entry.objects.none(), EmptyQuerySet)
+ True
+ ```
  * [all](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#all)
+ ```python
+ Returns a copy of the current QuerySet (or QuerySet subclass).
+ When a QuerySet is evaluated, it typically caches its results. 
+ If the data in the database might have changed since a QuerySet was evaluated, 
+ you can get updated results for the same query by calling all() 
+ on a previously evaluated QuerySet.
+ ```
  * [select_related](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#select-related)
+ ```python
+ e = Entry.objects.get(id=5) # Hits the database.
+ b = e.blog # Hits the database again to get the related Blog object.
+ 
+ # Hits the database.
+ e = Entry.objects.select_related('blog').get(id=5)
+
+ # Doesn't hit the database, because e.blog has been prepopulated
+ # in the previous query.
+ b = e.blog
+ 
+ b = Book.objects.select_related('author__hometown').get(id=4)
+ p = b.author         # Doesn't hit the database.
+ c = p.hometown       # Doesn't hit the database.
+
+ b = Book.objects.get(id=4) # No select_related() in this example.
+ p = b.author         # Hits the database.
+ c = p.hometown       # Hits the database.
+ ```
  * [prefetch_related](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#prefetch-related)
  * [extra](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#extra)
  * [defer](https://docs.djangoproject.com/en/1.8/ref/models/querysets/#defer)
